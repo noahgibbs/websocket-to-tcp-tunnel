@@ -193,6 +193,10 @@ function spawnChild(listen, send, host, name, tunnelInfo = true) {
     if (config.maximumRetries) {
         options.max = config.maximumRetries;
     }
+    if (config.listen_ssl) {
+        options.args.push('--listenSSLCert=' + config.listen_ssl.cert);
+        options.args.push('--listenSSLKey=' + config.listen_ssl.key);
+    }
 
     let child = new (forever.Monitor)('Relay.js', options);
     child.name = name;

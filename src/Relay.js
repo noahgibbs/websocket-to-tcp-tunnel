@@ -6,10 +6,20 @@ let logger = new require('./Logger')();
  * Parses arguments a little easier.
  */
 let args = require('minimist')(process.argv.slice(2));
+/**
+ * HTTPS and WSS support.
+ */
+let https = require('https');
+let fs = require('fs');
 
-logger.log('Starting relay for ' + args.name + '.');
+logger.log('Starting relay for ' + args.name);
 logger.log("\ton port " + args.listen);
-logger.log("\tto " + args.host + ':' + args.send);
+if (args.listenSSLCert) {
+    logger.log("\twith cert file " + args.listenSSLCert + " and key file " + args.listenSSLKey)
+} else {
+    logger.log("\twith no SSL")
+}
+logger.log("\tto " + args.host + ':' + args.send + ".");
 
 let shutdown = (signal) => {
     signal = signal || 'signal';
@@ -47,9 +57,19 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
 let WebSocketServer = require('ws').Server;
-let webServer = new WebSocketServer({
-    port: args.listen
-});
+let webServer = false;
+if (args.listenSSLCert) {
+    let server = https.createServer({
+      cert: fs.readFileSync(args.listenSSLCert),
+      key: fs.readFileSync(args.listenSSLKey),
+      port: args.listen
+    });
+    webServer = new WebSocketServer({ server });
+} else {
+    webServer = new WebSocketServer({
+        port: args.listen
+    });
+}
 
 // Handle any errors
 webServer.on('error', error => {
@@ -94,7 +114,7 @@ webServer.on('connection', function (client, request) {
         }
     });
     client.tunnel.connect(() => {
-        logger.log('Opened tunnel to TEC for ' + client.incoming_ip + '.');
+        logger.log('Opened tunnel to ' + args.name + ' for ' + client.incoming_ip + '.');
     });
 
     // When the WebSocket receives data relay it to the TCP tunnel.
