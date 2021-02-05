@@ -61,10 +61,11 @@ let webServer = false;
 if (args.listenSSLCert) {
     let server = https.createServer({
       cert: fs.readFileSync(args.listenSSLCert),
-      key: fs.readFileSync(args.listenSSLKey),
-      port: args.listen
+      key: fs.readFileSync(args.listenSSLKey)
     });
     webServer = new WebSocketServer({ server });
+
+    server.listen(args.listen);
 } else {
     webServer = new WebSocketServer({
         port: args.listen
