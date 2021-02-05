@@ -164,7 +164,7 @@ function bindChildListeners(child, server) {
  * @param tunnelInfo
  * @returns {*}
  */
-function spawnChild(listen, send, host, name, tunnelInfo = true) {
+function spawnChild(listen, send, host, name, listenSSL, tunnelInfo = true) {
     let logDir = './logs/';
     if (config.logDirectory) {
         logDir = config.logDirectory.endsWith('/') ? config.logDirectory : config.logDirectory + '/';
@@ -193,9 +193,9 @@ function spawnChild(listen, send, host, name, tunnelInfo = true) {
     if (config.maximumRetries) {
         options.max = config.maximumRetries;
     }
-    if (config.listen_ssl) {
-        options.args.push('--listenSSLCert=' + config.listen_ssl.cert);
-        options.args.push('--listenSSLKey=' + config.listen_ssl.key);
+    if (listenSSL) {
+        options.args.push('--listenSSLCert=' + listenSSL.cert);
+        options.args.push('--listenSSLKey=' + listenSSL.key);
     }
 
     let child = new (forever.Monitor)('Relay.js', options);
@@ -236,6 +236,7 @@ for (let server in config.servers) {
             config.servers[server].send,
             config.servers[server].host,
             config.servers[server].name,
+            config.servers[server].listen_ssl,
             sendInfo
         );
         bindChildListeners(child, config.servers[server].name);
